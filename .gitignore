@@ -1,0 +1,27 @@
+# Virtual Environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VS Code settings
+.vscode/
+
+
+# Environment variables
+.env
+
+# Output files
+outputs/
+
+# Generated graphs
+*.png
+*.jpg
+*.jpeg
+
+# Generated Excel files
+*.xlsx
+
