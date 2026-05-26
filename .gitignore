@@ -7,21 +7,22 @@ __pycache__/
 *.pyo
 *.pyd
 
-# VS Code settings
+# VS Code
 .vscode/
-
 
 # Environment variables
 .env
 
-# Output files
-outputs/
+# Ignore generated graph files 
+outputs/graphs/*.jpg
+outputs/graphs/*.jpeg
+outputs/graphs/*.png
 
-# Generated graphs
-*.png
-*.jpg
-*.jpeg
+# Ignore generated tables 
+outputs/tables/*.xlsx
 
-# Generated Excel files
-*.xlsx
+# Ignore processed datasets 
+outputs/processed_data/*.xlsx
 
+# ignore datasets
+data/*.xlsx
