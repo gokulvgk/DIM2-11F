@@ -250,4 +250,108 @@ def generate_all_graphs(df):
 
     plt.close()
 
+
+    # =====================================================
+    # 10. Mean Factor Scores by Gender
+    # =====================================================
+
+    gender_means = (
+    df.groupby('Gender')[FACTOR_COLUMNS]
+    .mean()
+    .T
+    )
+
+    gender_means.plot(
+        kind='bar',
+        figsize=(14, 7)
+    )
+
+    plt.title('Mean Factor Scores by Gender')
+
+    plt.ylabel('Average Score')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/gender_factor_comparison.png'
+    )
+
+    plt.close()
+
+    # =====================================================
+    # 11. Mathematics Anxiety by Gender (KDE)
+    # =====================================================
+
+    plt.figure(figsize=(8, 6))
+    
+    sns.kdeplot(
+        data=df,
+        x='Math_Anxiety',
+        hue='Gender',
+        fill=True,
+        common_norm=False,
+        alpha=0.4
+    )
+    
+    plt.title(
+        'Mathematics Anxiety Distribution by Gender'
+    )
+    
+    plt.tight_layout()
+    
+    plt.savefig(
+        'outputs/graphs/math_anxiety_gender_kde.png'
+    )
+    
+    plt.close()
+
+    # =====================================================
+    # 12. DIM² Output by Gender (Boxplot)
+    # =====================================================
+
+    plt.figure(figsize=(8, 6))
+
+    sns.boxplot(
+        data=df,
+        x='Gender',
+        y='DIM2_Output'
+    )
+
+    plt.title(
+        'DIM² Output Distribution by Gender'
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/dim2_gender_boxplot.png'
+    )
+
+    plt.close()
+
+    # =====================================================
+    # 13. Enrollment Decline by Gender (Violin Plot)
+    # =====================================================
+
+    plt.figure(figsize=(8, 6))
+
+    sns.violinplot(
+        data=df,
+        x='Gender',
+        y='Enrollment_Decline'
+    )
+
+    plt.title(
+        'Enrollment Decline by Gender'
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/enrollment_gender_violin.png'
+    )
+
+    plt.close()
+
     print("All Advanced Visualizations Generated")
+

@@ -8,12 +8,25 @@ def load_and_preprocess(file_path):
 
     print("Original Shape:", df.shape)
 
-    # Remove timestamp if present
-    drop_cols = [col for col in df.columns if 'Timestamp' in col]
+    # Remove timestamp columns if present
+    drop_cols = [
+        col for col in df.columns
+        if 'Timestamp' in col
+    ]
 
-    df.drop(columns=drop_cols, inplace=True, errors='ignore')
+    df.drop(
+        columns=drop_cols,
+        inplace=True,
+        errors='ignore'
+    )
 
-    # Likert Mapping
+    # Preserve Gender column
+    gender_col = None
+
+    if 'Gender' in df.columns:
+        gender_col = df['Gender'].copy()
+
+    # Likert Scale Mapping
     mapping = {
         'Strongly Agree': 5,
         'Agree': 4,
@@ -22,17 +35,27 @@ def load_and_preprocess(file_path):
         'Strongly Disagree': 1
     }
 
-    # Replace text responses
     df.replace(mapping, inplace=True)
 
-    # Convert everything possible to numeric
-    df = df.apply(pd.to_numeric, errors='coerce')
+    # Convert survey responses to numeric
+    df = df.apply(
+        pd.to_numeric,
+        errors='coerce'
+    )
 
-    # Fill missing values
-    df.fillna(df.mean(), inplace=True)
+    # Restore Gender column
+    if gender_col is not None:
+        df['Gender'] = gender_col
+
+    # Fill missing numeric values
+    numeric_cols = df.select_dtypes(
+        include=[np.number]
+    ).columns
+
+    df[numeric_cols] = df[numeric_cols].fillna(
+        df[numeric_cols].mean()
+    )
 
     print("Processed Shape:", df.shape)
-
-    print(df.head())
 
     return df
