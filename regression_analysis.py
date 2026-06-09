@@ -15,8 +15,6 @@ FACTOR_COLUMNS = [
     'Market_Driven_Policies'
 ]
 
-
-
 def run_regression_analysis(df):
 
     X = df[FACTOR_COLUMNS]
