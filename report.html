@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIM²–11F Analysis Report</title>
+
+<style>
+
+    *{
+        box-sizing:border-box;
+    }
+
+    body{
+        font-family: Arial, sans-serif;
+        line-height:1.6;
+        margin:40px;
+        background:#f5f5f5;
+        color:#333;
+    }
+
+    .container{
+        max-width:1400px;
+        margin:auto;
+    }
+
+    .section{
+        background:white;
+        padding:25px;
+        margin-bottom:30px;
+        border-radius:8px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    h1{
+        text-align:center;
+        color:#2c3e50;
+    }
+
+    h2{
+        color:#34495e;
+        border-bottom:2px solid #eee;
+        padding-bottom:10px;
+    }
+
+    h3{
+        color:#555;
+    }
+
+    .code-cell{
+        background:#1e1e1e;
+        color:#dcdcdc;
+        padding:15px;
+        border-radius:6px;
+        overflow-x:auto;
+        margin-top:10px;
+        margin-bottom:10px;
+    }
+
+    .output-cell{
+        background:#f8f9fa;
+        border-left:5px solid #28a745;
+        padding:15px;
+        border-radius:4px;
+        overflow-x:auto;
+        margin-bottom:15px;
+    }
+
+    pre{
+        margin:0;
+        white-space:pre-wrap;
+        word-wrap:break-word;
+    }
+
+    code{
+        font-family:Consolas, monospace;
+    }
+
+    .graph{
+        text-align:center;
+        margin-top:20px;
+    }
+
+    .graph img{
+        max-width:100%;
+        height:auto;
+        border:1px solid #ddd;
+        border-radius:6px;
+    }
+
+    figcaption{
+        margin-top:10px;
+        font-style:italic;
+        color:#666;
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:15px;
+    }
+
+    th,td{
+        border:1px solid #ddd;
+        padding:10px;
+        text-align:center;
+    }
+
+    th{
+        background:#2c3e50;
+        color:white;
+    }
+
+</style>
+
+
+</head>
+
+<body>
+
+<div class="container">
+
+
+<h1>DIM²–11F Analysis Report</h1>
+
+<div class="section">
+
+    <h2>Project Overview</h2>
+
+    <p>
+    This project investigates factors influencing the decline of
+    student participation in Mathematics programs using the DIM²–11F model.
+    The analysis includes preprocessing, factor construction,
+    statistical analysis, regression modelling, and visualization.
+    </p>
+
+</div>
+
+<div class="section">
+
+    <h2>1. Data Preprocessing</h2>
+
+    <div class="code-cell">
+```
+
+<pre><code>
+import pandas as pd
+import numpy as np
+
+
+def load_and_preprocess(file_path):
+
+    df = pd.read_excel(file_path)
+
+    print("Original Shape:", df.shape)
+
+    # Remove timestamp columns if present
+    drop_cols = [
+        col for col in df.columns
+        if 'Timestamp' in col
+    ]
+
+    df.drop(
+        columns=drop_cols,
+        inplace=True,
+        errors='ignore'
+    )
+
+    # Preserve Gender column
+    gender_col = None
+
+    if 'Gender' in df.columns:
+        gender_col = df['Gender'].copy()
+
+    # Likert Scale Mapping
+    mapping = {
+        'Strongly Agree': 5,
+        'Agree': 4,
+        'Neutral': 3,
+        'Disagree': 2,
+        'Strongly Disagree': 1
+    }
+
+    df.replace(mapping, inplace=True)
+
+    # Convert survey responses to numeric
+    df = df.apply(
+        pd.to_numeric,
+        errors='coerce'
+    )
+
+    # Restore Gender column
+    if gender_col is not None:
+        df['Gender'] = gender_col
+
+    # Fill missing numeric values
+    numeric_cols = df.select_dtypes(
+        include=[np.number]
+    ).columns
+
+    df[numeric_cols] = df[numeric_cols].fillna(
+        df[numeric_cols].mean()
+    )
+
+    print("Processed Shape:", df.shape)
+
+    return df
+</code></pre>
+
+```
+    </div>
+
+    <div class="output-cell">
+```
+
+<pre>
+Original Shape: (1227, 37)
+Processed Shape: (1227, 36)
+</pre>
+
+```
+    </div>
+
+</div>
+
+<div class="section">
+
+    <h2>2. Factor Construction</h2>
+
+    <div class="code-cell">
+```
+
+<pre><code>
+import pandas as pd
+
+def build_factors(df):
+
+    # Actual survey questions are columns 6 through 34
+    question_cols = df.columns[6:35]
+
+    q = df[question_cols]
+
+    # Factor 1: Q1-Q4
+    df['Math_Anxiety'] = q.iloc[:, 0:4].mean(axis=1)
+
+    # Factor 2: Q5-Q8
+    df['Curriculum_Complexity'] = q.iloc[:, 4:8].mean(axis=1)
+
+    # Factor 3: Q9-Q12
+    df['Teaching_Methodology'] = q.iloc[:, 8:12].mean(axis=1)
+
+    # Factor 4: Q13-Q15
+    df['School_Foundation'] = q.iloc[:, 12:15].mean(axis=1)
+
+    # Factor 5: Q16-Q18
+    df['Career_Awareness'] = q.iloc[:, 15:18].mean(axis=1)
+
+    # Factor 6: Q19-Q21
+    df['Employability_Perception'] = q.iloc[:, 18:21].mean(axis=1)
+
+    # Factor 7: Q22-Q24
+    df['Skill_Based_Preference'] = q.iloc[:, 21:24].mean(axis=1)
+
+    # Factor 8
+    df['Academic_Pressure'] = q.iloc[:, 24:27].mean(axis=1)
+
+    # Factor 9
+    df['Enrollment_Decline'] = q.iloc[:, 27]
+
+    # Factor 10
+    df['Curriculum_Inflexibility'] = q.iloc[:, 28]
+
+    # Factor 11
+    df['Market_Driven_Policies'] = (
+        q.iloc[:, 25:29].mean(axis=1)
+    )
+
+    return df
+</code></pre>
+
+```
+    </div>
+
+    <div class="output-cell">
+```
+
+<pre>
+Math_Anxiety Mean: 3.17
+Factor construction completed successfully.
+</pre>
+
+```
+    </div>
+
+</div>
+
+<div class="section">
+
+    <h2>3. Statistical Analysis</h2>
+
+    <div class="code-cell">
+```
+
+<pre><code>
+import pandas as pd
+
+
+FACTOR_COLUMNS = [
+    'Math_Anxiety',
+    'Curriculum_Complexity',
+    'Teaching_Methodology',
+    'School_Foundation',
+    'Career_Awareness',
+    'Employability_Perception',
+    'Skill_Based_Preference',
+    'Academic_Pressure',
+    'Enrollment_Decline',
+    'Curriculum_Inflexibility',
+    'Market_Driven_Policies'
+]
+
+
+def descriptive_statistics(df):
+    stats = df[FACTOR_COLUMNS].describe().T
+
+    stats.to_excel('outputs/tables/descriptive_statistics.xlsx')
+
+    print("Descriptive Statistics Saved")
+
+
+
+def correlation_analysis(df):
+    corr = df[FACTOR_COLUMNS].corr()
+
+    corr.to_excel('outputs/tables/correlation_matrix.xlsx')
+
+    print("Correlation Matrix Saved")
+</code></pre>
+
+```
+    </div>
+
+    <div class="output-cell">
+```
+
+<pre>
+Descriptive Statistics Saved
+Correlation Matrix Saved
+</pre>
+
+```
+    </div>
+
+</div>
+
+<div class="section">
+
+    <h2>4. DIM² Model</h2>
+
+    <div class="code-cell">
+```
+
+<pre><code>
+import numpy as np
+
+
+FACTOR_COLUMNS = [
+    'Math_Anxiety',
+    'Curriculum_Complexity',
+    'Teaching_Methodology',
+    'School_Foundation',
+    'Career_Awareness',
+    'Employability_Perception',
+    'Skill_Based_Preference',
+    'Academic_Pressure',
+    'Enrollment_Decline',
+    'Curriculum_Inflexibility',
+    'Market_Driven_Policies'
+]
+
+
+
+def entropy(row):
+    values = row.values
+
+    values = np.abs(values)
+
+    total = np.sum(values)
+
+    if total == 0:
+        return 0
+
+    probabilities = values / total
+
+    probabilities = probabilities[probabilities > 0]
+
+    return -np.sum(probabilities * np.log(probabilities))
+
+
+
+def apply_dim2_model(df):
+
+    # Equal weights
+    weights = np.ones(len(FACTOR_COLUMNS)) / len(FACTOR_COLUMNS)
+
+    # Initial Interest Score
+    df['I0'] = np.dot(df[FACTOR_COLUMNS], weights)
+
+    # Entropy Calculation
+    df['Entropy'] = df[FACTOR_COLUMNS].apply(entropy, axis=1)
+
+    # Lambda parameter
+    lambda_param = 0.5
+
+    # Adjusted Interest
+    df['Adjusted_Interest'] = df['I0'] - (
+        lambda_param * df['Entropy']
+    )
+
+    # Institutional Pressure
+    df['Institutional_Pressure'] = (
+        df['Enrollment_Decline'] +
+        df['Curriculum_Inflexibility'] +
+        df['Market_Driven_Policies']
+    ) / 3
+
+    # Final DIM² Output
+    df['DIM2_Output'] = (
+        df['Adjusted_Interest'] -
+        df['Institutional_Pressure']
+    )
+
+    df.to_excel('outputs/processed_data/dim2_results.xlsx')
+
+    return df
+</code></pre>
+
+```
+    </div>
+
+</div>
+
+<div class="section">
+
+    <h2>5. Regression Analysis</h2>
+
+    <div class="code-cell">
+```
+
+<pre><code>
+from sklearn.linear_model import LinearRegression
+import pandas as pd
+
+
+FACTOR_COLUMNS = [
+    'Math_Anxiety',
+    'Curriculum_Complexity',
+    'Teaching_Methodology',
+    'School_Foundation',
+    'Career_Awareness',
+    'Employability_Perception',
+    'Skill_Based_Preference',
+    'Academic_Pressure',
+    'Curriculum_Inflexibility',
+    'Market_Driven_Policies'
+]
+
+def run_regression_analysis(df):
+
+    X = df[FACTOR_COLUMNS]
+
+    y = df['Enrollment_Decline']
+
+    model = LinearRegression()
+
+    model.fit(X, y)
+
+    coefficients = pd.DataFrame({
+        'Factor': FACTOR_COLUMNS,
+        'Coefficient': model.coef_
+    })
+
+    coefficients.sort_values(
+        by='Coefficient',
+        ascending=False,
+        inplace=True
+    )
+
+    coefficients.to_excel(
+        'outputs/tables/regression_coefficients.xlsx',
+        index=False
+    )
+
+    print(coefficients)
+
+</code></pre>
+
+```
+    </div>
+
+    <div class="output-cell">
+```
+
+<pre>
+Factor                     Coefficient
+--------------------------------------
+Market_Driven_Policies     2.107915
+Employability_Perception   0.462736
+Math_Anxiety               0.299829
+Skill_Based_Preference     0.113585
+Teaching_Methodology       0.098676
+Curriculum_Complexity     -0.250311
+Career_Awareness          -0.282625
+School_Foundation         -0.391512
+Curriculum_Inflexibility  -0.543417
+Academic_Pressure         -0.902940
+</pre>
+
+```
+    </div>
+
+</div>
+
+<div class="section">
+
+    <h2>6. Correlation Heatmap</h2>
+
+    <div class="code-cell">
+        ```
+
+        <pre><code>
+    plt.figure(figsize=(12, 10))
+
+    sns.heatmap(
+        df[FACTOR_COLUMNS].corr(),
+        annot=True,
+        cmap='coolwarm'
+    )
+
+    plt.title('Correlation Heatmap')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/correlation_heatmap.png'
+    )
+
+    plt.close()
+        </code></pre>
+
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/correlation_heatmap.png">
+        <figcaption>Correlation Heatmap</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>7. PCA Visualization</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    scaler = StandardScaler()
+
+    scaled_data = scaler.fit_transform(
+        df[FACTOR_COLUMNS]
+    )
+
+    pca = PCA(n_components=2)
+
+    principal_components = pca.fit_transform(
+        scaled_data
+    )
+
+    plt.figure(figsize=(8, 6))
+
+    plt.scatter(
+        principal_components[:, 0],
+        principal_components[:, 1]
+    )
+
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+
+    plt.title('PCA Visualization')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/pca_visualization.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+
+    <figure class="graph">
+        <img src="outputs/graphs/pca_visualization.png">
+        <figcaption>PCA Visualization</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>8. Q-Q Plot</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(8, 6))
+
+    stats.probplot(
+        df['Math_Anxiety'],
+        dist="norm",
+        plot=plt
+    )
+
+    plt.title(
+        'Q-Q Plot for Mathematics Anxiety'
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/qq_plot_math_anxiety.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/qq_plot_math_anxiety.png">
+        <figcaption>Q-Q Plot of Mathematics Anxiety</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>9. 3D Scatter Plot</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    fig = plt.figure(figsize=(10, 8))
+
+    ax = fig.add_subplot(
+        111,
+        projection='3d'
+    )
+
+    ax.scatter(
+        df['Math_Anxiety'],
+        df['Academic_Pressure'],
+        df['Enrollment_Decline']
+    )
+
+    ax.set_xlabel('Math Anxiety')
+    ax.set_ylabel('Academic Pressure')
+    ax.set_zlabel('Enrollment Decline')
+
+    plt.title('3D Factor Interaction')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/3d_scatter_plot.png'
+    )
+
+    plt.close()
+
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/3d_scatter_plot.png">
+        <figcaption>3D Scatter Plot</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>10. Pair Plot</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    pairplot = sns.pairplot(
+        df[
+            [
+                'Math_Anxiety',
+                'Academic_Pressure',
+                'Enrollment_Decline'
+            ]
+        ]
+    )
+
+    pairplot.fig.suptitle(
+        'Pair Plot of Key Factors',
+        y=1.02
+    )
+
+    pairplot.savefig(
+        'outputs/graphs/pairplot.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/pairplot.png">
+        <figcaption>Factor Pair Plot</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>11. Regression Plot</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(8, 6))
+
+    sns.regplot(
+        x=df['Math_Anxiety'],
+        y=df['Enrollment_Decline']
+    )
+
+    plt.title(
+        'Regression: Anxiety vs Enrollment Decline'
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/regression_plot.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/regression_plot.png">
+        <figcaption>Regression Coefficients</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>12. Factor Distribution Boxplot</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(14, 6))
+
+    sns.boxplot(
+        data=df[FACTOR_COLUMNS]
+    )
+
+    plt.xticks(rotation=45)
+
+    plt.title('Factor Distribution Boxplot')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/factor_boxplot.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/factor_boxplot.png">
+        <figcaption>Factor Distribution</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>13. DIM² Histogram</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(8, 6))
+
+    plt.hist(
+        df['DIM2_Output'],
+        bins=20
+    )
+
+    plt.title('DIM² Output Distribution')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/dim2_histogram.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/dim2_histogram.png">
+        <figcaption>DIM² Output Distribution</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>14. Entropy Density Plot</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(8, 6))
+
+    sns.kdeplot(
+        df['Entropy'],
+        fill=True
+    )
+
+    plt.title('Entropy Density Distribution')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/entropy_density_plot.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/entropy_density_plot.png">
+        <figcaption>Entropy Density Distribution</figcaption>
+    </figure>
+
+</div>
+
+
+<div class="section">
+
+    <h2>15. Factor Comparison by Gender</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    gender_means = (
+    df.groupby('Gender')[FACTOR_COLUMNS]
+    .mean()
+    .T
+    )
+
+    gender_means.plot(
+        kind='bar',
+        figsize=(14, 7)
+    )
+
+    plt.title('Mean Factor Scores by Gender')
+
+    plt.ylabel('Average Score')
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/gender_factor_comparison.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/gender_factor_comparison.png">
+        <figcaption>Factor Comparison by Gender</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>16. Mathematics Anxiety by Gender</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(8, 6))
+    
+    sns.kdeplot(
+        data=df,
+        x='Math_Anxiety',
+        hue='Gender',
+        fill=True,
+        common_norm=False,
+        alpha=0.4
+    )
+    
+    plt.title(
+        'Mathematics Anxiety Distribution by Gender'
+    )
+    
+    plt.tight_layout()
+    
+    plt.savefig(
+        'outputs/graphs/math_anxiety_gender_kde.png'
+    )
+    
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/math_anxiety_gender_kde.png">
+        <figcaption>Mathematics Anxiety Distribution by Gender</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>17. DIM² Output by Gender</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(8, 6))
+
+    sns.boxplot(
+        data=df,
+        x='Gender',
+        y='DIM2_Output'
+    )
+
+    plt.title(
+        'DIM² Output Distribution by Gender'
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/dim2_gender_boxplot.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/dim2_gender_boxplot.png">
+        <figcaption>DIM² Output by Gender</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>18. Enrollment Decline by Gender</h2>
+
+    <div class="code-cell">
+        ```
+            
+        <pre><code>
+    plt.figure(figsize=(8, 6))
+
+    sns.violinplot(
+        data=df,
+        x='Gender',
+        y='Enrollment_Decline'
+    )
+
+    plt.title(
+        'Enrollment Decline by Gender'
+    )
+
+    plt.tight_layout()
+
+    plt.savefig(
+        'outputs/graphs/enrollment_gender_violin.png'
+    )
+
+    plt.close()
+        </code></pre>
+        
+        ```
+    </div>
+
+    <figure class="graph">
+        <img src="outputs/graphs/enrollment_gender_violin.png">
+        <figcaption>Enrollment Decline by Gender</figcaption>
+    </figure>
+
+</div>
+
+<div class="section">
+
+    <h2>Conclusion</h2>
+
+    <p>
+    The DIM²–11F model successfully identified major educational,
+    institutional, and employability-related factors influencing
+    the decline of Mathematics enrollment. Statistical analysis,
+    regression modelling, and visualizations provided insights into
+    both academic and policy-level contributors to student attrition.
+    </p>
+
+</div>
+```
+
+</div>
+
+</body>
+</html>
